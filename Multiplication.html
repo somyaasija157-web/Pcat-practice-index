@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mixed Digit Multiplication Quiz — 5 Sections</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --accent: #38bdf8;
+    --green: #22c55e;
+    --red: #ef4444;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 14px;
+    padding-bottom: 60px;
+  }
+  header { text-align: center; margin-bottom: 12px; }
+  h1 { font-size: 1.2rem; margin: 0 0 4px 0; }
+  p.subtitle { color: var(--muted); margin: 0; font-size: 0.82rem; }
+
+  #sectionLegend {
+    background: var(--card);
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    font-size: 0.75rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  #sectionLegend b { color: var(--text); }
+
+  #setNav {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 8px 2px;
+    margin-bottom: 10px;
+  }
+  .setBtn {
+    flex: 0 0 auto;
+    background: var(--card);
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.78rem;
+    color: var(--text);
+    cursor: pointer;
+    text-align: center;
+    min-width: 64px;
+  }
+  .setBtn.active { border-color: var(--accent); background: rgba(56,189,248,0.15); }
+  .setBtn.sectionStart { border-left: 3px solid var(--accent); }
+  .setBtn .setScore { display: block; font-size: 0.68rem; color: var(--green); margin-top: 2px; }
+
+  #controlBar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--card);
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  #controlBar .info { font-size: 0.8rem; }
+  #timerDisplay { font-weight: 700; font-size: 1.05rem; color: var(--accent); }
+  #timerDisplay.low { color: var(--red); }
+  .btnRow { display: flex; gap: 8px; }
+  button {
+    background: var(--accent);
+    color: #0f172a;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-weight: 700;
+    font-size: 0.82rem;
+    cursor: pointer;
+  }
+  button.secondary { background: #334155; color: var(--text); }
+  button:active { transform: scale(0.97); }
+
+  #grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 10px;
+  }
+  .qbox { background: var(--card); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+  .qlabel { font-size: 0.95rem; color: var(--muted); }
+  .qlabel b { color: var(--text); }
+  .options { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .option { background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 7px 8px; font-size: 0.8rem; text-align: center; cursor: pointer; user-select: none; }
+  .option:hover { border-color: var(--accent); }
+  .option.selected { border-color: var(--accent); background: rgba(56,189,248,0.15); }
+  .qbox.correct .option.selected { border-color: var(--green); background: rgba(34,197,94,0.2); }
+  .qbox.wrong .option.selected { border-color: var(--red); background: rgba(239,68,68,0.2); }
+  .qbox.wrong .option.correctAnswer { border-color: var(--green); background: rgba(34,197,94,0.2); }
+
+  #bottomBar { margin-top: 20px; text-align: center; }
+  #bottomBar button { padding: 12px 28px; font-size: 1rem; }
+  #resultBanner { text-align:center; font-size:0.95rem; margin: 10px 0; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Mixed Digit Multiplication — 5 Progressive Sections</h1>
+  <p class="subtitle">1000 questions · 20 sets × 50 · 60 min timer per set</p>
+</header>
+
+<div id="sectionLegend">
+  <b>Sec 1</b> (Sets 1-4): 2-digit × 3-digit only &nbsp;·&nbsp;
+  <b>Sec 2-4</b> (Sets 5-16): mixes of {2,3,4}-digit numbers &nbsp;·&nbsp;
+  <b>Sec 5</b> (Sets 17-20): all of {2,3,4,5}-digit numbers
+</div>
+
+<div id="setNav"></div>
+
+<div id="controlBar">
+  <div class="info" id="setInfo">Set 1 — Q1 to Q50</div>
+  <div id="timerDisplay">60:00</div>
+  <div class="btnRow">
+    <button class="secondary" id="pauseBtn">Pause</button>
+    <button class="secondary" id="retryBtn">Retry Set</button>
+    <button id="submitBtn">Submit Set</button>
+  </div>
+</div>
+
+<div id="resultBanner"></div>
+<div id="grid"></div>
+
+<div id="bottomBar">
+  <button id="submitBtnBottom">Submit Set</button>
+</div>
+
+<script>
+/* ---------- deterministic RNG so questions stay identical across reloads ---------- */
+function mulberry32(seed) {
+  return function() {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function shuffle(arr, rng) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function randInt(rng, min, max) { return Math.floor(rng() * (max - min + 1)) + min; }
+function randDigitNumber(rng, digits) {
+  const min = Math.pow(10, digits - 1);
+  const max = Math.pow(10, digits) - 1;
+  return randInt(rng, min, max);
+}
+function fmt(n) { return n.toLocaleString('en-IN'); }
+
+const rng = mulberry32(20260818);
+const TOTAL = 1000;
+const SET_SIZE = 50;
+const NUM_SETS = TOTAL / SET_SIZE; // 20
+const TIMER_SECONDS = 60 * 60;
+
+/* ---------- build combo pools per section ---------- */
+function combosFrom(digitList) {
+  const c = [];
+  for (let i = 0; i < digitList.length; i++) {
+    for (let j = i; j < digitList.length; j++) {
+      c.push([digitList[i], digitList[j]]);
+    }
+  }
+  return c;
+}
+
+// Section 1: sets 1-4 (200 Q) -> 2x3 only
+const pool1 = [];
+for (let k = 0; k < 200; k++) pool1.push([2, 3]);
+
+// Sections 2-4: sets 5-16 (600 Q) -> mixes of {2,3,4}
+const combos234 = combosFrom([2, 3, 4]); // 6 combos
+let pool2 = [];
+combos234.forEach(c => { for (let k = 0; k < 100; k++) pool2.push(c); }); // 6*100 = 600
+pool2 = shuffle(pool2, rng);
+
+// Section 5: sets 17-20 (200 Q) -> all of {2,3,4,5}
+const combosAll = combosFrom([2, 3, 4, 5]); // 10 combos
+let pool3 = [];
+combosAll.forEach(c => { for (let k = 0; k < 20; k++) pool3.push(c); }); // 10*20 = 200
+pool3 = shuffle(pool3, rng);
+
+const comboSequence = pool1.concat(pool2, pool3); // length 1000, in set order
+
+const questions = comboSequence.map((combo, idx) => {
+  const [d1, d2] = combo;
+  const a = randDigitNumber(rng, d1);
+  const b = randDigitNumber(rng, d2);
+  const correct = a * b;
+  return { id: idx + 1, a, b, correct };
+});
+
+function makeOptions(correct, rng) {
+  const opts = new Set([correct]);
+  const magnitude = Math.max(1, Math.round(correct * 0.06));
+  const pctOffsets = [0.04, 0.08, 0.13, 0.19, 0.27, -0.04, -0.08, -0.13, -0.19, -0.27];
+  const shuffled = shuffle(pctOffsets, rng);
+  for (const pct of shuffled) {
+    if (opts.size >= 4) break;
+    let val = Math.round(correct * (1 + pct));
+    if (val === correct) val += (pct > 0 ? magnitude : -magnitude);
+    if (val > 0 && !opts.has(val)) opts.add(val);
+  }
+  let filler = 1;
+  while (opts.size < 4) {
+    const val = correct + filler * magnitude * (filler % 2 === 0 ? 1 : -1);
+    if (val > 0 && !opts.has(val)) opts.add(val);
+    filler++;
+  }
+  return shuffle(Array.from(opts), rng);
+}
+questions.forEach(q => { q.options = makeOptions(q.correct, rng); });
+
+const sets = [];
+for (let s = 0; s < NUM_SETS; s++) {
+  sets.push(questions.slice(s * SET_SIZE, s * SET_SIZE + SET_SIZE));
+}
+
+function sectionLabelForSet(setIdx) {
+  if (setIdx < 4) return 'Section 1: 2×3 only';
+  if (setIdx < 8) return 'Section 2: {2,3,4} mix';
+  if (setIdx < 12) return 'Section 3: {2,3,4} mix';
+  if (setIdx < 16) return 'Section 4: {2,3,4} mix';
+  return 'Section 5: {2,3,4,5} all';
+}
+
+/* ---------- state / persistence ---------- */
+const STORAGE_PREFIX = 'mixedMultQuiz5Sec_set_';
+let currentSet = 0;
+let timerInterval = null;
+let timerPaused = false;
+
+function loadSetState(setIdx) {
+  const raw = localStorage.getItem(STORAGE_PREFIX + setIdx);
+  if (raw) { try { return JSON.parse(raw); } catch (e) {} }
+  return { answers: {}, submitted: false, score: 0, timeRemaining: TIMER_SECONDS };
+}
+function saveSetState(setIdx, state) {
+  localStorage.setItem(STORAGE_PREFIX + setIdx, JSON.stringify(state));
+}
+
+let state = loadSetState(currentSet);
+
+/* ---------- UI: set navigator ---------- */
+const setNav = document.getElementById('setNav');
+function renderSetNav() {
+  setNav.innerHTML = '';
+  for (let s = 0; s < NUM_SETS; s++) {
+    const st = loadSetState(s);
+    const btn = document.createElement('div');
+    btn.className = 'setBtn' + (s === currentSet ? ' active' : '') + ((s === 0 || s === 4 || s === 8 || s === 12 || s === 16) ? ' sectionStart' : '');
+    btn.innerHTML = `Set ${s + 1}` + (st.submitted ? `<span class="setScore">${st.score}/${SET_SIZE}</span>` : '');
+    btn.title = sectionLabelForSet(s);
+    btn.addEventListener('click', () => switchSet(s));
+    setNav.appendChild(btn);
+  }
+}
+
+function switchSet(newIdx) {
+  saveSetState(currentSet, state);
+  clearInterval(timerInterval);
+  currentSet = newIdx;
+  state = loadSetState(currentSet);
+  timerPaused = false;
+  document.getElementById('pauseBtn').textContent = 'Pause';
+  renderSetNav();
+  renderQuestions();
+  document.getElementById('setInfo').textContent =
+    `Set ${currentSet + 1} (${sectionLabelForSet(currentSet)}) — Q${currentSet * SET_SIZE + 1} to Q${(currentSet + 1) * SET_SIZE}`;
+  document.getElementById('resultBanner').textContent = '';
+  updateTimerDisplay();
+  if (!state.submitted) startTimer();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ---------- timer ---------- */
+function updateTimerDisplay() {
+  const m = Math.floor(state.timeRemaining / 60).toString().padStart(2, '0');
+  const s = (state.timeRemaining % 60).toString().padStart(2, '0');
+  const el = document.getElementById('timerDisplay');
+  el.textContent = `${m}:${s}`;
+  el.classList.toggle('low', state.timeRemaining <= 90 && !state.submitted);
+}
+function startTimer() {
+  clearInterval(timerInterval);
+  if (state.submitted) return;
+  timerInterval = setInterval(() => {
+    if (timerPaused) return;
+    state.timeRemaining--;
+    if (state.timeRemaining <= 0) {
+      state.timeRemaining = 0;
+      updateTimerDisplay();
+      clearInterval(timerInterval);
+      gradeSet(true);
+      return;
+    }
+    updateTimerDisplay();
+    if (state.timeRemaining % 5 === 0) saveSetState(currentSet, state);
+  }, 1000);
+}
+
+document.getElementById('pauseBtn').addEventListener('click', () => {
+  if (state.submitted) return;
+  timerPaused = !timerPaused;
+  document.getElementById('pauseBtn').textContent = timerPaused ? 'Resume' : 'Pause';
+});
+
+/* ---------- render questions ---------- */
+const grid = document.getElementById('grid');
+function renderQuestions() {
+  grid.innerHTML = '';
+  const setQuestions = sets[currentSet];
+  setQuestions.forEach(q => {
+    const box = document.createElement('div');
+    box.className = 'qbox';
+    box.id = 'qbox' + q.id;
+    if (state.submitted) {
+      const isCorrect = state.answers[q.id] === q.correct;
+      box.classList.add(isCorrect ? 'correct' : 'wrong');
+    }
+
+    const label = document.createElement('div');
+    label.className = 'qlabel';
+    label.innerHTML = `<b>${fmt(q.a)}</b> × <b>${fmt(q.b)}</b> = ?`;
+    box.appendChild(label);
+
+    const optDiv = document.createElement('div');
+    optDiv.className = 'options';
+    q.options.forEach(val => {
+      const opt = document.createElement('div');
+      opt.className = 'option';
+      opt.textContent = fmt(val);
+      opt.dataset.value = val;
+      if (val === q.correct) opt.dataset.correct = "true";
+      if (state.answers[q.id] === val) opt.classList.add('selected');
+      if (state.submitted && val === q.correct) opt.classList.add('correctAnswer');
+
+      if (!state.submitted) {
+        opt.addEventListener('click', () => {
+          optDiv.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+          opt.classList.add('selected');
+          state.answers[q.id] = val;
+          saveSetState(currentSet, state);
+        });
+      }
+      optDiv.appendChild(opt);
+    });
+    box.appendChild(optDiv);
+    grid.appendChild(box);
+  });
+}
+
+/* ---------- grading ---------- */
+function gradeSet(auto) {
+  if (state.submitted) return;
+  clearInterval(timerInterval);
+  let correctCount = 0;
+  let attempted = 0;
+  sets[currentSet].forEach(q => {
+    const sel = state.answers[q.id];
+    if (sel !== undefined) attempted++;
+    if (sel === q.correct) correctCount++;
+  });
+  state.submitted = true;
+  state.score = correctCount;
+  saveSetState(currentSet, state);
+  renderQuestions();
+  renderSetNav();
+  document.getElementById('resultBanner').textContent =
+    (auto ? 'Time up — ' : '') + `Score: ${correctCount} / ${SET_SIZE} (Attempted: ${attempted})`;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+document.getElementById('submitBtn').addEventListener('click', () => gradeSet(false));
+document.getElementById('submitBtnBottom').addEventListener('click', () => gradeSet(false));
+
+document.getElementById('retryBtn').addEventListener('click', () => {
+  state = { answers: {}, submitted: false, score: 0, timeRemaining: TIMER_SECONDS };
+  saveSetState(currentSet, state);
+  timerPaused = false;
+  document.getElementById('pauseBtn').textContent = 'Pause';
+  renderQuestions();
+  renderSetNav();
+  updateTimerDisplay();
+  document.getElementById('resultBanner').textContent = '';
+  startTimer();
+});
+
+/* ---------- init ---------- */
+renderSetNav();
+renderQuestions();
+document.getElementById('setInfo').textContent = `Set 1 (${sectionLabelForSet(0)}) — Q1 to Q50`;
+updateTimerDisplay();
+if (!state.submitted) startTimer();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Squares 1² – 150² Quiz</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    color: #f1f5f9;
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 20px;
+  }
+  .container {
+    max-width: 560px;
+    width: 100%;
+    background: #1e293b;
+    border-radius: 14px;
+    padding: 24px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    margin-top: 20px;
+  }
+  h1 {
+    font-size: 1.3rem;
+    text-align: center;
+    margin-bottom: 6px;
+    color: #fbbf24;
+  }
+  .subtitle {
+    text-align: center;
+    color: #94a3b8;
+    font-size: 0.85rem;
+    margin-bottom: 18px;
+  }
+  .progress-bar {
+    background: #334155;
+    border-radius: 8px;
+    height: 8px;
+    overflow: hidden;
+    margin-bottom: 18px;
+  }
+  .progress-fill {
+    background: #fbbf24;
+    height: 100%;
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+  .stats {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: #cbd5e1;
+    margin-bottom: 14px;
+  }
+  .question-box {
+    background: #0f172a;
+    border-radius: 10px;
+    padding: 22px;
+    text-align: center;
+    margin-bottom: 18px;
+  }
+  .question-text {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #f8fafc;
+  }
+  .options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .option-btn {
+    background: #334155;
+    color: #f1f5f9;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    padding: 16px 8px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .option-btn:hover:not(:disabled) {
+    background: #475569;
+    border-color: #fbbf24;
+  }
+  .option-btn:disabled {
+    cursor: default;
+  }
+  .option-btn.correct {
+    background: #16a34a;
+    border-color: #22c55e;
+  }
+  .option-btn.wrong {
+    background: #dc2626;
+    border-color: #ef4444;
+  }
+  .feedback {
+    text-align: center;
+    min-height: 24px;
+    margin-top: 14px;
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+  .feedback.correct-text { color: #4ade80; }
+  .feedback.wrong-text { color: #f87171; }
+  .nav-row {
+    display: flex;
+    justify-content: center;
+    margin-top: 16px;
+  }
+  .next-btn {
+    background: #fbbf24;
+    color: #1e293b;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 28px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    display: none;
+  }
+  .next-btn:hover { background: #f59e0b; }
+  .result-screen {
+    text-align: center;
+    display: none;
+  }
+  .result-screen h2 {
+    color: #fbbf24;
+    font-size: 1.6rem;
+  }
+  .score-big {
+    font-size: 2.4rem;
+    font-weight: bold;
+    margin: 12px 0;
+  }
+  .review-list {
+    text-align: left;
+    max-height: 260px;
+    overflow-y: auto;
+    background: #0f172a;
+    border-radius: 10px;
+    padding: 14px;
+    margin: 16px 0;
+    font-size: 0.9rem;
+  }
+  .review-item {
+    padding: 6px 0;
+    border-bottom: 1px solid #334155;
+    color: #cbd5e1;
+  }
+  .review-item.wrong-item { color: #f87171; }
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 10px;
+  }
+  .action-btn {
+    background: #334155;
+    color: #f1f5f9;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 0.95rem;
+    cursor: pointer;
+  }
+  .action-btn.primary {
+    background: #fbbf24;
+    color: #1e293b;
+    font-weight: bold;
+  }
+  .action-btn:hover { opacity: 0.9; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Squares Quiz: 1² to 150²</h1>
+  <div class="subtitle">150 questions · 4 options each · no time limit</div>
+
+  <div id="quizScreen">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="stats">
+      <span id="questionCounter">Question 1 / 150</span>
+      <span id="scoreCounter">Score: 0</span>
+    </div>
+
+    <div class="question-box">
+      <div class="question-text" id="questionText">12²</div>
+    </div>
+
+    <div class="options" id="optionsGrid"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="nav-row">
+      <button class="next-btn" id="nextBtn">Next →</button>
+    </div>
+  </div>
+
+  <div class="result-screen" id="resultScreen">
+    <h2>Quiz Complete!</h2>
+    <div class="score-big" id="finalScore">0 / 150</div>
+    <div id="finalPercent" style="color:#94a3b8;"></div>
+    <div class="review-list" id="reviewList"></div>
+    <div class="btn-row">
+      <button class="action-btn primary" id="retakeBtn">Retake Quiz</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Build a guaranteed-unique pool: exactly one entry per integer 1..150, no duplicates.
+  function buildQuestionPool() {
+    const seen = new Set();
+    const pool = [];
+    for (let n = 1; n <= 150; n++) {
+      if (!seen.has(n)) {
+        seen.add(n);
+        pool.push({ n: n, answer: n * n });
+      }
+    }
+    return pool;
+  }
+
+  function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  let questions = buildQuestionPool();
+
+  // Generate 3 distinct, well-spaced wrong options for a given correct answer
+  function generateOptions(correct, n) {
+    const options = new Set([correct]);
+    // Typical "close" mistakes: off-by-one on n, transposed digits, nearby square
+    const candidates = [];
+    if (n > 1) candidates.push((n - 1) * (n - 1));
+    candidates.push((n + 1) * (n + 1));
+    candidates.push(correct + n);      // common error: n^2 + n
+    candidates.push(correct - n);      // common error: n^2 - n
+    candidates.push(correct + 2 * n + 1);
+    candidates.push(correct - (2 * n - 1));
+
+    shuffle(candidates);
+    for (const c of candidates) {
+      if (options.size >= 4) break;
+      if (c > 0 && !options.has(c)) options.add(c);
+    }
+
+    // Fill any remaining slots with random offsets, keeping decent spacing
+    while (options.size < 4) {
+      const offset = Math.floor(Math.random() * 40) + 5;
+      const sign = Math.random() < 0.5 ? -1 : 1;
+      const candidate = correct + sign * offset;
+      if (candidate > 0 && !options.has(candidate)) {
+        options.add(candidate);
+      }
+    }
+
+    return shuffle(Array.from(options));
+  }
+
+  let current = 0;
+  let score = 0;
+  let answered = false;
+  let wrongAnswers = []; // {question, correct, picked}
+
+  const questionText = document.getElementById('questionText');
+  const optionsGrid = document.getElementById('optionsGrid');
+  const feedback = document.getElementById('feedback');
+  const nextBtn = document.getElementById('nextBtn');
+  const questionCounter = document.getElementById('questionCounter');
+  const scoreCounter = document.getElementById('scoreCounter');
+  const progressFill = document.getElementById('progressFill');
+  const quizScreen = document.getElementById('quizScreen');
+  const resultScreen = document.getElementById('resultScreen');
+
+  function loadQuestion() {
+    answered = false;
+    feedback.textContent = '';
+    feedback.className = 'feedback';
+    nextBtn.style.display = 'none';
+
+    const q = questions[current];
+    questionText.textContent = q.n + '²';
+    questionCounter.textContent = `Question ${current + 1} / ${questions.length}`;
+    scoreCounter.textContent = `Score: ${score}`;
+    progressFill.style.width = ((current) / questions.length * 100) + '%';
+
+    const opts = generateOptions(q.answer, q.n);
+
+    optionsGrid.innerHTML = '';
+    opts.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'option-btn';
+      btn.textContent = opt;
+      btn.addEventListener('click', () => selectAnswer(opt, q.answer, btn));
+      optionsGrid.appendChild(btn);
+    });
+  }
+
+  function selectAnswer(picked, correct, btnEl) {
+    if (answered) return;
+    answered = true;
+
+    const buttons = optionsGrid.querySelectorAll('.option-btn');
+    buttons.forEach(b => {
+      b.disabled = true;
+      if (parseInt(b.textContent) === correct) {
+        b.classList.add('correct');
+      }
+    });
+
+    if (picked === correct) {
+      score++;
+      feedback.textContent = 'Correct!';
+      feedback.className = 'feedback correct-text';
+    } else {
+      btnEl.classList.add('wrong');
+      feedback.textContent = `Wrong. Correct answer: ${correct}`;
+      feedback.className = 'feedback wrong-text';
+      wrongAnswers.push({
+        question: questions[current].n + '²',
+        correct: correct,
+        picked: picked
+      });
+    }
+
+    scoreCounter.textContent = `Score: ${score}`;
+    nextBtn.style.display = 'inline-block';
+  }
+
+  nextBtn.addEventListener('click', () => {
+    current++;
+    if (current >= questions.length) {
+      showResults();
+    } else {
+      loadQuestion();
+    }
+  });
+
+  function showResults() {
+    quizScreen.style.display = 'none';
+    resultScreen.style.display = 'block';
+    progressFill.style.width = '100%';
+
+    document.getElementById('finalScore').textContent = `${score} / ${questions.length}`;
+    const pct = Math.round((score / questions.length) * 100);
+    document.getElementById('finalPercent').textContent = `${pct}% accuracy`;
+
+    const reviewList = document.getElementById('reviewList');
+    if (wrongAnswers.length === 0) {
+      reviewList.innerHTML = '<div class="review-item">Perfect score! No wrong answers.</div>';
+    } else {
+      reviewList.innerHTML = '<strong>Review of mistakes:</strong>';
+      wrongAnswers.forEach(w => {
+        const div = document.createElement('div');
+        div.className = 'review-item wrong-item';
+        div.textContent = `${w.question} = ${w.correct}  (you picked ${w.picked})`;
+        reviewList.appendChild(div);
+      });
+    }
+  }
+
+  document.getElementById('retakeBtn').addEventListener('click', () => {
+    questions = buildQuestionPool();
+    current = 0;
+    score = 0;
+    wrongAnswers = [];
+    quizScreen.style.display = 'block';
+    resultScreen.style.display = 'none';
+    loadQuestion();
+  });
+
+  loadQuestion();
+</script>
+
+</body>
+</html>

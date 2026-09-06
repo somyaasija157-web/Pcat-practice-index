@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cube Root Approximation Quiz — 1000 Q</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --accent: #38bdf8;
+    --green: #22c55e;
+    --red: #ef4444;
+    --amber: #f59e0b;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 14px;
+    padding-bottom: 60px;
+  }
+  header { text-align: center; margin-bottom: 12px; }
+  h1 { font-size: 1.3rem; margin: 0 0 4px 0; }
+  p.subtitle { color: var(--muted); margin: 0; font-size: 0.85rem; }
+
+  #setNav {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 8px 2px;
+    margin-bottom: 10px;
+  }
+  .setBtn {
+    flex: 0 0 auto;
+    background: var(--card);
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    color: var(--text);
+    cursor: pointer;
+    text-align: center;
+    min-width: 64px;
+  }
+  .setBtn.active { border-color: var(--accent); background: rgba(56,189,248,0.15); }
+  .setBtn .setScore { display: block; font-size: 0.7rem; color: var(--green); margin-top: 2px; }
+
+  #controlBar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--card);
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  #controlBar .info { font-size: 0.85rem; }
+  #timerDisplay { font-weight: 700; font-size: 1.05rem; color: var(--accent); }
+  #timerDisplay.low { color: var(--red); }
+  .btnRow { display: flex; gap: 8px; }
+  button {
+    background: var(--accent);
+    color: #0f172a;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-weight: 700;
+    font-size: 0.82rem;
+    cursor: pointer;
+  }
+  button.secondary { background: #334155; color: var(--text); }
+  button.danger { background: var(--red); color: #fff; }
+  button:active { transform: scale(0.97); }
+
+  #grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 10px;
+  }
+  .qbox { background: var(--card); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+  .qlabel { font-size: 0.9rem; color: var(--muted); }
+  .qlabel b { color: var(--text); }
+  .options { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .option { background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 7px 8px; font-size: 0.85rem; text-align: center; cursor: pointer; user-select: none; }
+  .option:hover { border-color: var(--accent); }
+  .option.selected { border-color: var(--accent); background: rgba(56,189,248,0.15); }
+  .qbox.correct .option.selected { border-color: var(--green); background: rgba(34,197,94,0.2); }
+  .qbox.wrong .option.selected { border-color: var(--red); background: rgba(239,68,68,0.2); }
+  .qbox.wrong .option.correctAnswer { border-color: var(--green); background: rgba(34,197,94,0.2); }
+  .actualNote { font-size: 0.72rem; color: var(--muted); display: none; }
+  .qbox.wrong .actualNote, .qbox.correct .actualNote { display: block; }
+
+  #bottomBar { margin-top: 20px; text-align: center; }
+  #bottomBar button { padding: 12px 28px; font-size: 1rem; }
+  #resultBanner { text-align:center; font-size:0.95rem; margin: 10px 0; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Cube Root Approximation — 1000 Questions</h1>
+  <p class="subtitle">20 sets × 50 questions · 40 min timer per set · nearest whole-number approximation</p>
+</header>
+
+<div id="setNav"></div>
+
+<div id="controlBar">
+  <div class="info" id="setInfo">Set 1 — Q1 to Q50</div>
+  <div id="timerDisplay">40:00</div>
+  <div class="btnRow">
+    <button class="secondary" id="pauseBtn">Pause</button>
+    <button class="secondary" id="retryBtn">Retry Set</button>
+    <button id="submitBtn">Submit Set</button>
+  </div>
+</div>
+
+<div id="resultBanner"></div>
+<div id="grid"></div>
+
+<div id="bottomBar">
+  <button id="submitBtnBottom">Submit Set</button>
+</div>
+
+<script>
+/* ---------- deterministic RNG so questions stay identical across reloads ---------- */
+function mulberry32(seed) {
+  return function() {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function shuffle(arr, rng) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+const rng = mulberry32(20260818);
+const TOTAL = 1000;
+const SET_SIZE = 50;
+const NUM_SETS = TOTAL / SET_SIZE;
+const TIMER_SECONDS = 40 * 60;
+
+/* ---------- generate 1000 unique imperfect-cube numbers, progressive difficulty ---------- */
+const used = new Set();
+const rawQuestions = [];
+while (rawQuestions.length < TOTAL) {
+  const progress = rawQuestions.length / TOTAL;
+  const minRoot = 4 + progress * 42;   // roots roughly climb from ~4 to ~46
+  const maxRoot = minRoot + 14;
+  const targetRoot = minRoot + rng() * (maxRoot - minRoot);
+  let n = Math.round(Math.pow(targetRoot, 3) + (rng() * 46 - 23));
+  if (n < 30) n += 30;
+  const roundedRoot = Math.round(Math.cbrt(n));
+  if (Math.pow(roundedRoot, 3) === n) {
+    n += (rng() > 0.5 ? 1 : -1) * (1 + Math.floor(rng() * 5));
+  }
+  if (n < 20 || used.has(n)) continue;
+  const actual = Math.cbrt(n);
+  const approx = Math.round(actual);
+  if (Math.pow(approx, 3) === n) continue;
+  used.add(n);
+  rawQuestions.push({ n, approx, actual });
+}
+rawQuestions.sort((a, b) => a.n - b.n); // progressive difficulty across sets
+
+function makeOptions(correct) {
+  const opts = new Set([correct]);
+  const offsets = shuffle([-2, -3, -4, -6, 2, 3, 4, 6, 5, -5], rng);
+  for (const off of offsets) {
+    if (opts.size >= 4) break;
+    const val = correct + off;
+    if (val > 0 && !opts.has(val)) opts.add(val);
+  }
+  let filler = 7;
+  while (opts.size < 4) {
+    const val = correct + filler;
+    if (val > 0 && !opts.has(val)) opts.add(val);
+    filler++;
+  }
+  return shuffle(Array.from(opts), rng);
+}
+
+const questions = rawQuestions.map((q, idx) => ({
+  id: idx + 1,
+  n: q.n,
+  approx: q.approx,
+  actual: q.actual,
+  options: makeOptions(q.approx)
+}));
+
+const sets = [];
+for (let s = 0; s < NUM_SETS; s++) {
+  sets.push(questions.slice(s * SET_SIZE, s * SET_SIZE + SET_SIZE));
+}
+
+/* ---------- state / persistence ---------- */
+const STORAGE_PREFIX = 'cubeRootApproxQuiz_set_';
+let currentSet = 0;
+let timerInterval = null;
+let timerPaused = false;
+
+function loadSetState(setIdx) {
+  const raw = localStorage.getItem(STORAGE_PREFIX + setIdx);
+  if (raw) {
+    try { return JSON.parse(raw); } catch (e) {}
+  }
+  return { answers: {}, submitted: false, score: 0, timeRemaining: TIMER_SECONDS };
+}
+function saveSetState(setIdx, state) {
+  localStorage.setItem(STORAGE_PREFIX + setIdx, JSON.stringify(state));
+}
+
+let state = loadSetState(currentSet);
+
+/* ---------- UI: set navigator ---------- */
+const setNav = document.getElementById('setNav');
+function renderSetNav() {
+  setNav.innerHTML = '';
+  for (let s = 0; s < NUM_SETS; s++) {
+    const st = loadSetState(s);
+    const btn = document.createElement('div');
+    btn.className = 'setBtn' + (s === currentSet ? ' active' : '');
+    btn.innerHTML = `Set ${s + 1}` + (st.submitted ? `<span class="setScore">${st.score}/${SET_SIZE}</span>` : '');
+    btn.addEventListener('click', () => switchSet(s));
+    setNav.appendChild(btn);
+  }
+}
+
+function switchSet(newIdx) {
+  saveSetState(currentSet, state);
+  clearInterval(timerInterval);
+  currentSet = newIdx;
+  state = loadSetState(currentSet);
+  timerPaused = false;
+  document.getElementById('pauseBtn').textContent = 'Pause';
+  renderSetNav();
+  renderQuestions();
+  document.getElementById('setInfo').textContent =
+    `Set ${currentSet + 1} — Q${currentSet * SET_SIZE + 1} to Q${(currentSet + 1) * SET_SIZE}`;
+  document.getElementById('resultBanner').textContent = '';
+  updateTimerDisplay();
+  if (!state.submitted) startTimer();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ---------- timer ---------- */
+function updateTimerDisplay() {
+  const m = Math.floor(state.timeRemaining / 60).toString().padStart(2, '0');
+  const s = (state.timeRemaining % 60).toString().padStart(2, '0');
+  const el = document.getElementById('timerDisplay');
+  el.textContent = `${m}:${s}`;
+  el.classList.toggle('low', state.timeRemaining <= 60 && !state.submitted);
+}
+function startTimer() {
+  clearInterval(timerInterval);
+  if (state.submitted) return;
+  timerInterval = setInterval(() => {
+    if (timerPaused) return;
+    state.timeRemaining--;
+    if (state.timeRemaining <= 0) {
+      state.timeRemaining = 0;
+      updateTimerDisplay();
+      clearInterval(timerInterval);
+      gradeSet(true);
+      return;
+    }
+    updateTimerDisplay();
+    if (state.timeRemaining % 5 === 0) saveSetState(currentSet, state);
+  }, 1000);
+}
+
+document.getElementById('pauseBtn').addEventListener('click', () => {
+  if (state.submitted) return;
+  timerPaused = !timerPaused;
+  document.getElementById('pauseBtn').textContent = timerPaused ? 'Resume' : 'Pause';
+});
+
+/* ---------- render questions ---------- */
+const grid = document.getElementById('grid');
+function renderQuestions() {
+  grid.innerHTML = '';
+  const setQuestions = sets[currentSet];
+  setQuestions.forEach(q => {
+    const box = document.createElement('div');
+    box.className = 'qbox';
+    box.id = 'qbox' + q.id;
+    if (state.submitted) {
+      const isCorrect = state.answers[q.id] === q.approx;
+      box.classList.add(isCorrect ? 'correct' : 'wrong');
+    }
+
+    const label = document.createElement('div');
+    label.className = 'qlabel';
+    label.innerHTML = `∛<b>${q.n}</b> ≈ ?`;
+    box.appendChild(label);
+
+    const optDiv = document.createElement('div');
+    optDiv.className = 'options';
+    q.options.forEach(val => {
+      const opt = document.createElement('div');
+      opt.className = 'option';
+      opt.textContent = val;
+      opt.dataset.value = val;
+      if (val === q.approx) opt.dataset.correct = "true";
+      if (state.answers[q.id] === val) opt.classList.add('selected');
+      if (state.submitted && val === q.approx) opt.classList.add('correctAnswer');
+
+      if (!state.submitted) {
+        opt.addEventListener('click', () => {
+          optDiv.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+          opt.classList.add('selected');
+          state.answers[q.id] = val;
+          saveSetState(currentSet, state);
+        });
+      }
+      optDiv.appendChild(opt);
+    });
+    box.appendChild(optDiv);
+
+    const note = document.createElement('div');
+    note.className = 'actualNote';
+    note.textContent = `actual ∛${q.n} = ${q.actual.toFixed(2)}`;
+    box.appendChild(note);
+
+    grid.appendChild(box);
+  });
+}
+
+/* ---------- grading ---------- */
+function gradeSet(auto) {
+  if (state.submitted) return;
+  clearInterval(timerInterval);
+  let correctCount = 0;
+  let attempted = 0;
+  sets[currentSet].forEach(q => {
+    const sel = state.answers[q.id];
+    if (sel !== undefined) attempted++;
+    if (sel === q.approx) correctCount++;
+  });
+  state.submitted = true;
+  state.score = correctCount;
+  saveSetState(currentSet, state);
+  renderQuestions();
+  renderSetNav();
+  document.getElementById('resultBanner').textContent =
+    (auto ? 'Time up — ' : '') + `Score: ${correctCount} / ${SET_SIZE} (Attempted: ${attempted})`;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+document.getElementById('submitBtn').addEventListener('click', () => gradeSet(false));
+document.getElementById('submitBtnBottom').addEventListener('click', () => gradeSet(false));
+
+document.getElementById('retryBtn').addEventListener('click', () => {
+  state = { answers: {}, submitted: false, score: 0, timeRemaining: TIMER_SECONDS };
+  saveSetState(currentSet, state);
+  timerPaused = false;
+  document.getElementById('pauseBtn').textContent = 'Pause';
+  renderQuestions();
+  renderSetNav();
+  updateTimerDisplay();
+  document.getElementById('resultBanner').textContent = '';
+  startTimer();
+});
+
+/* ---------- init ---------- */
+renderSetNav();
+renderQuestions();
+document.getElementById('setInfo').textContent = `Set 1 — Q1 to Q50`;
+updateTimerDisplay();
+if (!state.submitted) startTimer();
+</script>
+
+</body>
+</html>
