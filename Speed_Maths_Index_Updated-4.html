@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SPEED MATHS</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --card2: #16213a;
+    --accent: #38bdf8;
+    --green: #22c55e;
+    --red: #ef4444;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 24px 16px 60px;
+  }
+  #app { max-width: 720px; margin: 0 auto; }
+
+  header { text-align: center; margin-bottom: 28px; }
+  h1 {
+    font-size: 2.2rem;
+    letter-spacing: 2px;
+    margin: 0 0 8px 0;
+    background: linear-gradient(90deg, #38bdf8, #818cf8);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  p.subtitle {
+    color: var(--muted);
+    margin: 0;
+    font-size: 0.95rem;
+  }
+
+  #list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: relative;
+    transition: border-color 0.15s;
+  }
+  .card:hover { border-color: var(--accent); }
+  .cardNum {
+    flex: 0 0 auto;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: rgba(56,189,248,0.15);
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+  }
+  .cardBody { flex: 1 1 auto; min-width: 0; }
+  .cardTitle {
+    font-size: 1.02rem;
+    font-weight: 600;
+    margin: 0 0 2px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .cardSub {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .cardOpen {
+    flex: 0 0 auto;
+    background: var(--accent);
+    color: #0f172a;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.82rem;
+    padding: 8px 14px;
+    border-radius: 8px;
+  }
+  .cardOpen:active { transform: scale(0.97); }
+  .cardRemove {
+    flex: 0 0 auto;
+    background: transparent;
+    border: 1px solid #475569;
+    color: var(--muted);
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .cardRemove:hover { border-color: var(--red); color: var(--red); }
+
+  #controls {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 8px;
+  }
+  button.mainBtn {
+    background: var(--card2);
+    border: 1px dashed #475569;
+    color: var(--text);
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  button.mainBtn:hover { border-color: var(--accent); color: var(--accent); }
+
+  #addForm {
+    display: none;
+    background: var(--card);
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 12px;
+    flex-direction: column;
+    gap: 10px;
+  }
+  #addForm.open { display: flex; }
+  #addForm label { font-size: 0.78rem; color: var(--muted); }
+  #addForm input {
+    width: 100%;
+    padding: 9px 10px;
+    border-radius: 8px;
+    border: 1px solid #334155;
+    background: #0f172a;
+    color: var(--text);
+    font-size: 0.9rem;
+  }
+  #addForm .formRow { display: flex; flex-direction: column; gap: 4px; }
+  #addForm .formBtns { display: flex; gap: 8px; margin-top: 4px; }
+  #addForm .formBtns button {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 0.85rem;
+  }
+  #saveEntryBtn { background: var(--green); color: #0f172a; }
+  #cancelEntryBtn { background: #334155; color: var(--text); }
+
+  #footerNote {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.75rem;
+    margin-top: 24px;
+  }
+  #footerNote a { color: var(--accent); cursor: pointer; text-decoration: underline; }
+  #limitNote { text-align: center; color: var(--red); font-size: 0.78rem; margin-top: 6px; display: none; }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header>
+    <h1>SPEED MATHS</h1>
+    <p class="subtitle">Your speed math practice hub — tap any set below to open it</p>
+  </header>
+
+  <div id="list"></div>
+
+  <div id="controls">
+    <button class="mainBtn" id="addBtn">＋ Add File</button>
+  </div>
+  <p id="limitNote">Limit reached — this index can hold up to 100 entries.</p>
+
+  <div id="addForm">
+    <div class="formRow">
+      <label for="titleInput">Heading (e.g. "Percentages 1000 Q")</label>
+      <input type="text" id="titleInput" placeholder="Title shown on the card">
+    </div>
+    <div class="formRow">
+      <label for="subInput">Sub-heading (optional, e.g. "20 sets × 50, 40 min timer")</label>
+      <input type="text" id="subInput" placeholder="Short description">
+    </div>
+    <div class="formRow">
+      <label for="fileInput">Select the HTML file (recommended on Android)</label>
+      <input type="file" id="fileInput" accept=".html,.htm,text/html">
+      <small style="color:var(--muted);font-size:.72rem;">
+        Selecting the file imports it into this index so the Open button works even when Chrome shows a content:// address.
+      </small>
+    </div>
+    <div class="formRow">
+      <label for="linkInput">File name (optional fallback)</label>
+      <input type="text" id="linkInput" placeholder="e.g. Percentages_1000.html">
+    </div>
+    <div class="formBtns">
+      <button id="cancelEntryBtn">Cancel</button>
+      <button id="saveEntryBtn">Save</button>
+    </div>
+  </div>
+
+  <p id="footerNote">For reliable Android use, select each HTML file when adding it; the index stores the file and its card will keep working. &nbsp;·&nbsp; <a id="resetBtn">Reset to default 5</a></p>
+</div>
+
+<script>
+  const STORAGE_KEY = 'speedMathsIndexEntries_v2';
+  const DB_NAME = 'speedMathsIndexFiles_v1';
+  const DB_STORE = 'files';
+  const MAX_ENTRIES = 100;
+
+  const defaultEntries = [
+    { title: 'Squares 1 to 150', sub: 'MCQ · widely spaced options', href: 'Squares_1_to_150.html' },
+    { title: 'Square Root — 1000 Questions', sub: '20 sets × 50 · approximation practice', href: 'Square_Root_1000_Questions.html' },
+    { title: 'Cubes 1 to 100', sub: 'MCQ format', href: 'Cubes_1_to_100.html' },
+    { title: 'Cube Root Questions', sub: '1000 Q · 20 sets × 50 · 40 min timer', href: 'Cube_Root_Questions.html' },
+    { title: 'Multiplication', sub: 'Mixed digit-length practice', href: 'Multiplication.html' }
+  ];
+
+  // ---------- IndexedDB: stores imported HTML files ----------
+  function openDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, 1);
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        if (!db.objectStoreNames.contains(DB_STORE)) db.createObjectStore(DB_STORE);
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  async function putFile(key, html, name) {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(DB_STORE, 'readwrite');
+      tx.objectStore(DB_STORE).put({ html, name }, key);
+      tx.oncomplete = () => { db.close(); resolve(); };
+      tx.onerror = () => { db.close(); reject(tx.error); };
+    });
+  }
+
+  async function getFile(key) {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(DB_STORE, 'readonly');
+      const req = tx.objectStore(DB_STORE).get(key);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => reject(req.error);
+      tx.oncomplete = () => db.close();
+    });
+  }
+
+  async function deleteFile(key) {
+    if (!key) return;
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(DB_STORE, 'readwrite');
+      tx.objectStore(DB_STORE).delete(key);
+      tx.oncomplete = () => { db.close(); resolve(); };
+      tx.onerror = () => { db.close(); reject(tx.error); };
+    });
+  }
+
+  // ---------- Entries ----------
+  function loadEntries() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length) return parsed;
+      }
+    } catch (e) {}
+    return defaultEntries.slice();
+  }
+
+  function saveEntries() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  }
+
+  let entries = loadEntries();
+
+  const listEl = document.getElementById('list');
+  const limitNote = document.getElementById('limitNote');
+  const addBtn = document.getElementById('addBtn');
+
+  async function openEntry(entry) {
+    // Imported files are opened from a Blob URL. This avoids the Android
+    // content:// relative-link problem.
+    if (entry.fileKey) {
+      try {
+        const saved = await getFile(entry.fileKey);
+        if (saved && saved.html) {
+          const blob = new Blob([saved.html], { type: 'text/html' });
+          const url = URL.createObjectURL(blob);
+          window.open(url, '_blank');
+          return;
+        }
+      } catch (e) {
+        alert('Could not open the imported file. Please add it again.');
+        return;
+      }
+    }
+
+    // Fallback for old/manual entries.
+    const href = (entry.href || '').trim();
+    if (!href) {
+      alert('No file has been selected for this entry.');
+      return;
+    }
+
+    // If it is an actual web URL, open it normally.
+    if (/^(https?:|data:|blob:)/i.test(href)) {
+      window.open(href, '_blank');
+      return;
+    }
+
+    // Android content:// pages often cannot resolve sibling relative files.
+    // Let the user select the exact local HTML file and import it.
+    const picker = document.createElement('input');
+    picker.type = 'file';
+    picker.accept = '.html,.htm,text/html';
+    picker.style.display = 'none';
+    document.body.appendChild(picker);
+
+    picker.addEventListener('change', async () => {
+      const file = picker.files && picker.files[0];
+      picker.remove();
+      if (!file) return;
+
+      try {
+        const html = await file.text();
+        const key = 'file_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+        await putFile(key, html, file.name);
+
+        entry.fileKey = key;
+        entry.href = file.name;
+        saveEntries();
+
+        alert('File imported successfully. Tap Open again.');
+        render();
+      } catch (e) {
+        alert('Could not import that HTML file.');
+      }
+    });
+
+    picker.click();
+  }
+
+  function render() {
+    listEl.innerHTML = '';
+
+    entries.forEach((entry, idx) => {
+      const card = document.createElement('div');
+      card.className = 'card';
+
+      const num = document.createElement('div');
+      num.className = 'cardNum';
+      num.textContent = idx + 1;
+
+      const body = document.createElement('div');
+      body.className = 'cardBody';
+
+      const title = document.createElement('p');
+      title.className = 'cardTitle';
+      title.textContent = entry.title;
+      body.appendChild(title);
+
+      if (entry.sub) {
+        const sub = document.createElement('p');
+        sub.className = 'cardSub';
+        sub.textContent = entry.sub;
+        body.appendChild(sub);
+      }
+
+      const open = document.createElement('button');
+      open.className = 'cardOpen';
+      open.textContent = 'Open';
+      open.addEventListener('click', () => openEntry(entry));
+
+      const remove = document.createElement('button');
+      remove.className = 'cardRemove';
+      remove.textContent = '−';
+      remove.title = 'Remove this entry';
+      remove.addEventListener('click', async () => {
+        const old = entries[idx];
+        entries.splice(idx, 1);
+        saveEntries();
+        await deleteFile(old.fileKey);
+        render();
+      });
+
+      card.appendChild(num);
+      card.appendChild(body);
+      card.appendChild(open);
+      card.appendChild(remove);
+      listEl.appendChild(card);
+    });
+
+    limitNote.style.display = entries.length >= MAX_ENTRIES ? 'block' : 'none';
+    addBtn.style.display = entries.length >= MAX_ENTRIES ? 'none' : 'inline-block';
+  }
+
+  // ---------- Add form ----------
+  const addForm = document.getElementById('addForm');
+  const titleInput = document.getElementById('titleInput');
+  const subInput = document.getElementById('subInput');
+  const linkInput = document.getElementById('linkInput');
+  const fileInput = document.getElementById('fileInput');
+
+  addBtn.addEventListener('click', () => {
+    addForm.classList.add('open');
+    titleInput.value = '';
+    subInput.value = '';
+    linkInput.value = '';
+    fileInput.value = '';
+    titleInput.focus();
+  });
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files && fileInput.files[0];
+    if (file) {
+      if (!titleInput.value.trim()) {
+        titleInput.value = file.name.replace(/\.(html?|HTML?)$/, '').replace(/[_-]+/g, ' ');
+      }
+      linkInput.value = file.name;
+    }
+  });
+
+  document.getElementById('cancelEntryBtn').addEventListener('click', () => {
+    addForm.classList.remove('open');
+  });
+
+  document.getElementById('saveEntryBtn').addEventListener('click', async () => {
+    const title = titleInput.value.trim();
+    const sub = subInput.value.trim();
+    const href = linkInput.value.trim();
+    const file = fileInput.files && fileInput.files[0];
+
+    if (!title || (!href && !file)) {
+      alert('Enter a heading and select the HTML file. Selecting the file is the recommended option.');
+      return;
+    }
+
+    if (entries.length >= MAX_ENTRIES) {
+      alert('Limit of 100 entries reached.');
+      return;
+    }
+
+    const entry = { title, sub, href };
+
+    if (file) {
+      try {
+        const html = await file.text();
+        const key = 'file_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+        await putFile(key, html, file.name);
+        entry.fileKey = key;
+        entry.href = file.name;
+      } catch (e) {
+        alert('Could not import the selected HTML file.');
+        return;
+      }
+    }
+
+    entries.push(entry);
+    saveEntries();
+    addForm.classList.remove('open');
+    fileInput.value = '';
+    render();
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', async () => {
+    if (confirm('Reset the list back to the original 5 files? This removes files added to this index.')) {
+      for (const e of entries) await deleteFile(e.fileKey);
+      entries = defaultEntries.slice();
+      saveEntries();
+      render();
+    }
+  });
+
+  render();
+</script>
+
+</body>
+</html>
